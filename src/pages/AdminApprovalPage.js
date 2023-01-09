@@ -14,21 +14,16 @@ export function AdminApproval() {
     };
 
     const RejectAdminApproval = async (id) => {
-        // let formdata = new FormData()
-
-        // formdata.append("adminApproval_title", adminApprovalTitle)
-        // formdata.append("adminApproval_id", adminApprovalId)
         await axios.post("http://127.0.0.1:8000/api/adminapproval/author/reject/" + id).then(res => { })
         alert('rejected')
         getAdminApprovals();
     }
     const ApproveAdminApproval = async (id) => {
-        // let formdata = new FormData()
-
-        // formdata.append("adminApproval_title", adminApprovalTitle)
-        // formdata.append("adminApproval_id", adminApprovalId)
-        await axios.post("http://127.0.0.1:8000/api/adminapproval/author/approve/" + id).then(res => { })
-        alert('approved')
+        await axios.post("http://127.0.0.1:8000/api/adminapproval/author/approve/" + id).then(res => {
+            alert('approved')
+        }).catch((error) => {
+            console.log(error.response.data);
+        });
         getAdminApprovals();
     }
 
@@ -57,22 +52,21 @@ export function AdminApproval() {
                                     <td className="td">
                                         {data.id}
                                     </td>
-                                    <td className="td"  >
+                                    <td className="td">
                                         <img src={data.photo_profile_link} style={{ width: "100%", height: "100px" }} />
                                     </td>
-                                    <td className="td"  >
+                                    <td className="td">
                                         Author
                                     </td>
-                                    <td className="td"  >
+                                    <td className="td">
                                         {data.name}
                                     </td>
-                                    <td className="td"  >
+                                    <td className="td">
                                         {data.author_description}
                                     </td>
                                     <td className="td">
-                                        <button onClick={() => ApproveAdminApproval(data.id)} className="action-button">Approve</button>/
-                                        <button onClick={() => RejectAdminApproval(data.id)} className="action-button">Rejected</button>
-
+                                        <button onClick={(e) => { e.preventDefault(); ApproveAdminApproval(data.id) }} className="action-button">Approve</button>/
+                                        <button onClick={(e) => { e.preventDefault(); RejectAdminApproval(data.id) }} className="action-button">Rejected</button>
                                     </td>
                                 </tr>
                             )

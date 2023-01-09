@@ -26,7 +26,6 @@ export function NavigationLink() {
             <Route path="/" element={<><SideNavigationBar /><Home /></>} />
             <Route path="/news">
                 <Route index element={<><SideNavigationBar /><NewsPage /></>} />
-                <Route path="add" element={<><SideNavigationBar /><AddNews /></>} />
                 <Route path="update/:news_id" element={<><SideNavigationBar /><UpdateNews /></>} />
             </Route>
             <Route path="/topic">

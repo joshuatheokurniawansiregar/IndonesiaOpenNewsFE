@@ -52,7 +52,6 @@ export function TopicPage() {
                                             <td  >
                                                 <a href={`/topic/update/${data.topic_slug}`} className="action-button">Update</a>/
                                                 <button onClick={() => DeleteTopic(data.id)} className="action-button">Delete</button>
-
                                             </td>
                                         </tr>
                                     )

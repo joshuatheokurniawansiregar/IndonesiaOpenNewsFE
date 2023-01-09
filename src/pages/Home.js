@@ -12,34 +12,56 @@ export function Home() {
     const [news, setNews] = useState([]);
     const [unchangedNews, setUnchangedNews] = useState([]);
     const [filteredNewsByDate, setFilteredNewsByDate] = useState([]);
+    const [adminApprovals, setAdminApprovals] = useState([]);
     const [filterDate, setFilterDate] = useState(new Date());
-    useEffect(() => {
-        async function getTopics() {
-            const topics = await axios.get("http://127.0.0.1:8000/api/topics");
-            setTopics(topics.data.topics);
-        }
-        async function getSubTopics() {
-            await axios("http://127.0.0.1:8000/api/sub_topics").then(response => {
-                setSubTopics(response.data.sub_topics);
-            });
-        }
-        async function getAuthors() {
-            const authors = await axios.get("http://127.0.0.1:8000/api/authors");
-            setAuthors(authors.data);
-        }
-        async function getNews() {
-            await axios.get("http://127.0.0.1:8000/api/news").then(response => {
-                setNews(response.data);
-                setUnchangedNews(response.data);
-            });
-        }
+    async function getTopics() {
+        const topics = await axios.get("http://127.0.0.1:8000/api/topics");
+        setTopics(topics.data.topics);
+    }
+    async function getSubTopics() {
+        await axios("http://127.0.0.1:8000/api/sub_topics").then(response => {
+            setSubTopics(response.data.sub_topics);
+        });
+    }
+    async function getAuthors() {
+        const authors = await axios.get("http://127.0.0.1:8000/api/authors");
+        setAuthors(authors.data);
+    }
+    async function getNews() {
+        await axios.get("http://127.0.0.1:8000/api/news").then(response => {
+            setNews(response.data);
+            setUnchangedNews(response.data);
+        });
+    }
 
+    const getAdminApprovals = async () => {
+        await axios.get("http://127.0.0.1:8000/api/adminapproval/author").then(res => {
+            setAdminApprovals(res.data.admin_approval)
+        })
+    };
+
+    const RejectAdminApproval = async (id) => {
+        await axios.post("http://127.0.0.1:8000/api/adminapproval/author/reject/" + id).then(res => { })
+        alert('rejected')
+        getAdminApprovals();
+    }
+    const ApproveAdminApproval = async (id) => {
+        await axios.post("http://127.0.0.1:8000/api/adminapproval/author/approve/" + id).then(res => {
+            alert('approved')
+        }).catch((error) => {
+            console.log(error.response.data);
+        });
+        getAdminApprovals();
+    }
+
+    useEffect(() => {
         if (localStorage.getItem("user")) {
             setTimeout(function () {
                 getTopics();
                 getSubTopics();
                 getAuthors();
                 getNews();
+                getAdminApprovals();
             }, 1);
         }
     }, []);
@@ -82,6 +104,17 @@ export function Home() {
                 setNews(filterednews);
             }
         });
+    }
+    function directToUpdateNewsPage(news_slug) {
+        window.location.replace("/news/update/" + news_slug);
+    }
+    const DeleteSubtopic = async (id) => {
+        await axios.delete("http://127.0.0.1:8000/api/sub_topics/" + id).then(res => { });
+        getSubTopics();
+    }
+    const DeleteTopic = async (id) => {
+        await axios.delete("http://127.0.0.1:8000/api/topics/" + id).then(res => { })
+        getTopics();
     }
     return (
         <>
@@ -144,7 +177,7 @@ export function Home() {
                                     <p>{new Date(new Date(data.added_at).toDateString()).toLocaleDateString() + " " + new Date(data.added_at).toLocaleString('en-US', { weekday: 'long' })}</p>
                                     {element_updatedat}
                                     <p className="font-body-content">{data.news_content}</p>
-                                    <button className="btn-custom btn-custom-white" style={{ display: "inline-block" }}>
+                                    <button className="btn-custom btn-custom-white" onClick={() => directToUpdateNewsPage(data.id)} style={{ display: "inline-block" }}>
                                         Update
                                     </button>
                                     <button className="btn-custom btn-custom-red margin-top-2" style={{ display: "inline-block" }}>
@@ -173,7 +206,10 @@ export function Home() {
                                         <tr className="tr" key={key}>
                                             <td className="td">{data.id}</td>
                                             <td className="td">{data.topic_title}</td>
-                                            <td className="td"><NavLink to={`/topic/update/${data.topic_slug}`} className="action-button">Update</NavLink>/<NavLink to="#" className="action-button">Delete</NavLink></td>
+                                            <td className="td">
+                                                <NavLink to={`/topic/update/${data.topic_slug}`} className="action-button">Update</NavLink>/
+                                                <button to="#" className="action-button" onClick={() => DeleteTopic(data.id)}>Delete</button>
+                                            </td>
                                         </tr>
                                     </>
                                 )
@@ -184,7 +220,7 @@ export function Home() {
                 <div style={{ border: "2px solid black", marginTop: "10px", marginBottom: "10px", width: "100%" }}>
                     <h5 className="center-auto">Sub Topic Table</h5>
                 </div>
-                <button className="btn-custom btn-custom-emerald margin-left-3">Add Sub Topic</button>
+                <button className="btn-custom btn-custom-emerald margin-left-3" onClick={() => window.location.replace("subtopic/add")}>Add a Sub Topic</button>
                 <table className="table margin-left-3 width-80 margin-top-1">
                     <thead className="thead">
                         <tr className="tr">
@@ -200,7 +236,12 @@ export function Home() {
                                     <tr className="tr" key={key}>
                                         <td className="td">{data.id}</td>
                                         <td className="td">{data.sub_topic_title}</td>
-                                        <td className="td"><NavLink to={`/subtopic/update/${data.sub_topic_slug}`} className="action-button">Update</NavLink>/<button className="action-button">Delete</button></td>
+                                        <td className="td">
+                                            <NavLink to={`/subtopic/update/${data.sub_topic_slug}`} className="action-button">Update
+                                            </NavLink>/
+                                            <button className="action-button" onClick={() => DeleteSubtopic(data.id)}>Delete
+                                            </button>
+                                        </td>
                                     </tr>
                                 );
                             })
@@ -214,18 +255,41 @@ export function Home() {
                     <thead className="thead">
                         <tr className="tr">
                             <th className="th">Admin Approval ID</th>
+                            <th className="th">Author Photo</th>
+                            <th className="th">Author Title</th>
                             <th className="th">Author Name</th>
                             <th className="th">Author Description</th>
                             <th className="th">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr className="tr">
-                            <td className="td">1</td>
-                            <td className="td">Test</td>
-                            <td className="td"><a href="#" className="action-button">Update</a>/<a href="#" className="action-button">Delete</a></td>
-                            <td className="td"><a href="#" className="action-button">Update</a>/<a href="#" className="action-button">Delete</a></td>
-                        </tr>
+                        {
+                            adminApprovals.map((data, key) => {
+                                return (
+                                    <tr key={key}>
+                                        <td className="td">
+                                            {data.id}
+                                        </td>
+                                        <td className="td">
+                                            <img src={data.photo_profile_link} style={{ width: "100%", height: "100px" }} />
+                                        </td>
+                                        <td className="td">
+                                            Author
+                                        </td>
+                                        <td className="td">
+                                            {data.name}
+                                        </td>
+                                        <td className="td">
+                                            {data.author_description}
+                                        </td>
+                                        <td className="td">
+                                            <button onClick={(e) => { e.preventDefault(); ApproveAdminApproval(data.id) }} className="action-button">Approve</button>/
+                                            <button onClick={(e) => { e.preventDefault(); RejectAdminApproval(data.id) }} className="action-button">Rejected</button>
+                                        </td>
+                                    </tr>
+                                )
+                            })
+                        }
                     </tbody>
                 </table>
             </div>

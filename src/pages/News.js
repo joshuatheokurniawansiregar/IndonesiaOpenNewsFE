@@ -241,7 +241,7 @@ export function UpdateNews() {
         console.log(formData.get("image_file", newsFile))
         console.log(formData.get("sub_topic_id", subTopicId))
         // alert('ok')
-        await axios.post('http://127.0.0.1:8000/api/news/6', formData,
+        await axios.post('http://127.0.0.1:8000/api/news/' + news_id, formData,
             {
                 headers: { "Content-type": "multipart/form-data" },
             }).then(res => {
@@ -254,15 +254,18 @@ export function UpdateNews() {
     }
 
     const getNews = async () => {
-        await axios.get("http://127.0.0.1:8000/api/news/update/" + news_id).then(res => {
+        await axios.get("http://127.0.0.1:8000/api/news/update/" + news_id).then(async (res) => {
             setNews(res.data[0])
-
             setNewsTitle(res.data[0].news_title != null ? res.data[0].news_title : "")
             setNewsContent(res.data[0].news_content != null ? res.data[0].news_content : "")
             setNewsStatus(res.data[0].news_status != null ? res.data[0].news_status : "")
             setNewsName(res.data[0].name != null ? res.data[0].name : "")
             setNewsPictureLink(res.data[0].news_picture_link != null ? res.data[0].news_picture_link : "")
             setSubTopicId(res.data[0].sub_topic_id != null ? res.data[0].sub_topic_id : "")
+            const sub_topic = await axios.get("http://127.0.0.1:8000/api/sub_topics/show_by_id/" + res.data[0].sub_topic_id);
+            await axios.get(`http://127.0.0.1:8000/api/topics/showbyid/${sub_topic.data.sub_topics["topic_id"]}`).then(response => {
+                document.getElementById("topic-by-sub-toopic").innerHTML = response.data.topics["topic_title"];
+            });
         })
     }
     const getSubTopics = async () => {
@@ -280,7 +283,28 @@ export function UpdateNews() {
         getTopics();
         getNews();
     }, [])
+    // function insertParagraph(row, par) {
+    //     const caretPos = row.selectionStart,
+    //         textAreaTxt = row.value,
+    //         newCaretPos = caretPos + par.length;
+    //     row.setSelectionRange(newCaretPos, newCaretPos);
+    //     console.log(row.index);
+    //     if (caretPos == caretPos) {
+    //         row.value = textAreaTxt.substring(0, caretPos) + par + textAreaTxt.substring(caretPos);
 
+    //     }
+    // }
+    async function chooseTopic(e) {
+        setSubTopicId(e.target.value);
+        const sub_topic = await axios.get("http://127.0.0.1:8000/api/sub_topics/show_by_id/" + e.target.value);
+        if (e.target.value === "selected") {
+            document.getElementById("topic-by-sub-toopic").innerHTML = "";
+        } else {
+            axios.get(`http://127.0.0.1:8000/api/topics/showbyid/${sub_topic.data.sub_topics["topic_id"]}`).then(response => {
+                document.getElementById("topic-by-sub-toopic").innerHTML = response.data.topics["topic_title"];
+            });
+        }
+    }
     return (
         <>
             <div className="main-side">
@@ -293,20 +317,24 @@ export function UpdateNews() {
                     </div>
                     <div className="flex-custom flex-justify-content-start-custom flex-row-custom align-items-baseline-custom width-80 margin-left-2">
                         <label htmlFor="sub-topic">Content</label>
-                        <textarea value={newsContent} onChange={(e) => { setNewsContent(e.target.value) }} rows="5" className="form-control-custom width-75 margin-left-2" id="sub-topic" />
+                        <textarea value={newsContent} onKeyDown={(e) => {
+                            if (e.key == "Enter") {
+                                // insertParagraph(e.target, '"New paragraph"')
+                            }
+                        }} style={{ height: "200px" }} onChange={(e) => {
+                            setNewsContent(e.target.value);
+                        }} rows="5" className="form-control-custom width-75 margin-left-2" id="sub-topic" />
                     </div>
                     <div className="flex-custom flex-justify-content-start-custom flex-row-custom align-items-baseline-custom width-80 margin-left-2">
                         <label htmlFor="sub-topic">Status</label>
-                        <input value={newsStatus} onChange={(e) => { setNewsStatus(e.target.value) }} type={"text"} className="form-control-custom width-75 margin-left-2" id="sub-topic" />
+                        <input value={newsStatus} disabled onChange={(e) => { setNewsStatus(e.target.value) }} type={"text"} className="form-control-custom width-75 margin-left-2" id="sub-topic" />
                     </div>
                     <div className="flex-custom flex-justify-content-start-custom flex-row-custom align-items-baseline-custom width-80 margin-left-2">
                         <label htmlFor="sub-topic">Name</label>
                         <input value={newsName} onChange={(e) => { setNewsName(e.target.value) }} type={"text"} className="form-control-custom width-75 margin-left-2" id="sub-topic" />
                     </div>
                     <div className="flex-custom flex-justify-content-start-custom flex-row-custom align-items-baseline-custom width-80 margin-left-2">
-
                         <label htmlFor="sub-topic">Images</label>
-
                         <img style={{ maxWidth: "40%", height: "250x", }} className="margin-bottom-2" src={newsPictureLink} />
                         <input onChange={(e) => { setNewsFile(e.target.files[0]) }} type={"file"} accept="image/*" className="form-control-custom width-75 margin-left-2" id="sub-topic" />
                     </div>
@@ -324,7 +352,7 @@ export function UpdateNews() {
                     </div> */}
                     <div className="flex-custom flex-justify-start-custom flex-row-custom align-items-baseline-custom width-80 margin-left-2">
                         <label htmlFor="topic">Sub Topic</label>
-                        <select value={subTopicId} onChange={(e) => { setSubTopicId(e.target.value) }} type={"text"} className="form-control-custom width-75 margin-left-4" id="topic">
+                        <select value={subTopicId} onChange={chooseTopic} type={"text"} className="form-control-custom width-75 margin-left-4" id="topic">
                             <option>Choose Topic</option>
                             {
                                 subTopics.map((data, index) => {
@@ -332,7 +360,10 @@ export function UpdateNews() {
                                 })
                             }
                         </select>
-
+                    </div>
+                    <div className="flex-custom flex-justify-content-start-custom flex-row-custom align-items-baseline-custom width-80 margin-left-2">
+                        <p>Topic: </p>
+                        <p id="topic-by-sub-toopic"></p>
                     </div>
                     <button className="btn-custom btn-custom-sky margin-left-7" >Update News</button>
                 </form>

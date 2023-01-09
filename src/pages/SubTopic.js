@@ -23,9 +23,6 @@ export function SubTopicPage() {
     }
 
     useEffect(() => {
-
-
-
         getSubTopics();
 
     }, []);
