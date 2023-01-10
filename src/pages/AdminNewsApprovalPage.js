@@ -21,7 +21,7 @@ export function AdminNewsnApproval() {
     }
     const ApproveAdminApproval = async (id) => {
         await axios.post("http://127.0.0.1:8000/api/adminapproval/news/approve/" + id).then(res => {
-            // alert('approved')
+            alert('approved')
             console.log(res.data.approved_news);
         }).catch(error => {
             console.log(error.response.data);
